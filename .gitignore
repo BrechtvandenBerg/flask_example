@@ -1,3 +1,11 @@
-/env*
-.pydevproject
-.project
+# python auto generated
+*.py[a-z]
+
+.coverage
+*.log
+*.project
+*.pydevproject
+.settings/*
+env*
+**/__pycache__/
+.externalToolBuilders/*
