@@ -4,13 +4,19 @@
   <meta charset="utf-8">
 </head>
 <body>
-  <script src="/static/js/ngl.2.0.0-dev.33.js"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      var stage = new NGL.Stage("viewport");
-      stage.loadFile("rcsb://1crn", {defaultRepresentation: true});
-    });
+  	<script src="/static/js/ngl.2.0.0-dev.33.js"></script>
+ 	 <script>
+    	document.addEventListener("DOMContentLoaded", function () {
+     	 var stage = new NGL.Stage("viewport");
+     	 stage.loadFile("rcsb://{{pdb_id}}", {defaultRepresentation: true});
+   	 });
   </script>
+	<form method="POST"> 
+	  <input class="input is-fullwidth" type="text" name="geneName"
+	  		id="geneName" size="20" onclick="this.setSelectionRange(0, this.value.length)"
+			placeholder="Gene name here" required />
+	  <button type="submit" name="submit" value="iets">Submit</button>
+	</form>
   <div id="viewport" style="width:400px; height:300px;"></div>
 </body>
 </html>
