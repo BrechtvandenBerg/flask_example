@@ -9,6 +9,8 @@ def create_app(settings=None):
 
     app = Flask(__name__, static_folder='presentation/web/static', static_url_path='/static',
                template_folder='presentation/web/templates')
+    
+    app.config.from_object('ngl_example.default_settings')
 
     # Ignore Flask's built-in logging
     # app.logger is accessed here so Flask tries to create it
