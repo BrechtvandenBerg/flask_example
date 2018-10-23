@@ -3,19 +3,22 @@
 <!-- Scripts needed for functionality on this page -->
 <script src="{{ url_for('static', filename='js/dashboard/dashboard.js') }}"></script>
 
-
 <!-- Staring definition of site content -->
-<section class="section" id="content">	  	
+<section class="section" id="content">	 \
+ 	
 	<form method="POST" action="/">
 		{{ form.csrf_token }}
 	    {{ form.pdb_id(size=4) }} 
-		<div id="????"></div>
-	    <input type="submit" value="Submit">		    
+		
+	    <input type="submit" value="Submit">	
+	    
+	    <div id="selectedResi"></div>	    
 	</form>
-	
-	
-	  		  	
+		  		  	
 	<div id="viewport" style="width:1000px; height:800px; float:right;"></div>
-	<script async>loadStructure('{{pdb_id}}');</script>
+	
+	<script >loadStructure('{{pdb_id}}');</script>
+	
 </section>
+
 {% endblock %} {% block js %} {% endblock %}
