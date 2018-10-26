@@ -4,7 +4,7 @@
 <script src="{{ url_for('static', filename='js/dashboard/dashboard.js') }}"></script>
 
 <!-- Staring definition of site content -->
-<section class="section" id="content">	 \
+<section class="section" id="content">	 
  	
 	<form method="POST" action="/">
 		{{ form.csrf_token }}
@@ -12,12 +12,19 @@
 		
 	    <input type="submit" value="Submit">	
 	    
-	    <div id="selectedResi"></div>	    
+	    <div id="selectedResi"></div>	 
+	     
 	</form>
 		  		  	
-	<div id="viewport" style="width:1000px; height:800px; float:right;"></div>
+	<div id="viewport" style="width:900px; height:800px; float:right;"></div>
+	<button id="toggleSideChains">Show sidechains</button>  
+	<button id="clearView">Clear view</button>  
+	<button id="centeResidue">Center on residue</button>
 	
-	<script >loadStructure('{{pdb_id}}');</script>
+	
+	<script async>if( '{{pdb_id}}' != 'None'){
+		loadStructure('{{pdb_id}}')
+	}</script>
 	
 </section>
 
