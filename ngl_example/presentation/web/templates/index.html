@@ -9,23 +9,53 @@
 	<form method="POST" action="/">
 		{{ form.csrf_token }}
 	    {{ form.pdb_id(size=4) }} 
-		
-	    <input type="submit" value="Submit">	
+		 
+	    <input class="button" type="submit" value="Submit">
 	    
-	    <div id="selectedResi"></div>	 
-	     
+	<div id="selectedResi"></div>
+		 
 	</form>
-		  		  	
-	<div id="viewport" style="width:900px; height:800px; float:right;"></div>
-	<button id="toggleSideChains">Show sidechains</button>  
-	<button id="clearView">Clear view</button>  
-	<button id="centeResidue">Center on residue</button>
 	
+	<div class="button" id="toggleSideChains">Show sidechains</div>
+	<div class="button" id="clearView">Clear view</div>
+	<div class="button" id="centerView">Center the view</div>
+	<div class="checkbox">
+  		<input type="checkbox" id="radCheck">
+  		See nearby atoms (when clicking)
+	</div>	
+</section>
+
+<section class="box" id="viewer">	
+	  		  	
+	<div class="container" id="viewport" style="height:600px;"></div>
 	
 	<script async>if( '{{pdb_id}}' != 'None'){
-		loadStructure('{{pdb_id}}')
-	}</script>
-	
-</section>
+		loadStructure('{{pdb_id}}')}</script>
+		
+</section>	
+
+<div class="field">
+  <div class="control">
+    <label class="label">Give position and chain ID </label>
+    <input class="input is-info" id="colorResid" type="text" placeholder="[22:A][#e76818]">
+  </div>
+</div>
+
+<div class="button" id="colorSelect">Submit</div>
+
+
+	<div class="field">
+  <div class="control">
+  	<label class="label">Give the following: [Three letter code]Position:Chain for example [VAL]21:A</label>
+    <input class="input is-info" id="resToSwap" type="text" placeholder="Residue to be mutated ">
+  </div>
+</div>
+<div class="field">
+  <div class="control">
+    <input class="input is-info" id="resForSwap" type="text" placeholder="Mutation">
+  </div>
+</div>
+
+<div class="button" id="swapResidues">Submit</div>
 
 {% endblock %} {% block js %} {% endblock %}

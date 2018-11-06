@@ -3,6 +3,7 @@ from Bio.PDB import PDBList
 from werkzeug import redirect
 from ngl_example.presentation.web.forms import pdbRequestForm
 from wtforms.validators import ValidationError
+from flask_wtf.form import FlaskForm
 
 
 bp = Blueprint('web', __name__)
@@ -23,10 +24,6 @@ def getPDB(pdb_id):
     if form.validate_on_submit():
         return redirect('/render_pdb_id/'+str(form.pdb_id._value()))
     
+    
+    
     return render_template('index.html',form=form, pdb_id=pdb_id)
-
-
-
-
-
-
