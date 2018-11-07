@@ -110,25 +110,61 @@ function residueMutation(pdb_id){
 };
 
 function parseInput(colorResid){
-	//structure=        [position:chainid][color], [22:A][blue], etc
-	var colorResid= $("#colorResid").val();
-	var positions = colorResid.slice(0,-2);
-	var chainid = colorResid.slice(-2);
-	var parsed = positions +" and "+ chainid;
-		
-	return parsed;
+	var positionColor = {}
+	var colorResid = $("#colorResid").val(); //  example of data structure A22:#f9d057,A34: #f9d057
+	
+	// separate out each key/value pair
+    var parts = colorResid.split(',');
+    for(var i = 0; i < parts.length; i++) {
+        var p = parts[i];
+        // split Key/Value pair
+        var keyValuePair = p.split(':');
+         
+        // add Key/Value pair to Dictionary object
+        var key = keyValuePair[0];
+        var value = keyValuePair[1];
+        positionColor[key] = value;
+    	};
+    
+    	var colors = Object.values(positionColor);
+    	console.log(colors);
+    	
+    
+    console.log("---------------------------positions--------------------------------")
+    	
+    // the last step the extraction of positions
+    var sortChainPositions = Object.keys(positionColor); 
+    sortChainPositions.sort(); // sorting necessary for the selection    
+    var chainPositions = sortChainPositions.toString();
+    console.log(chainPositions);
+    
+    var prePositions = ''
+    var positionsRaw = chainPositions.split(','); // extract the positions from chainPositions
+    for(var j = 0; j < positionsRaw.length; j++) {
+        var q = positionsRaw[j];
+        var qq = q.slice(1) +",";
+        prePositions  += qq;         
+    }
+    var positions = prePositions.slice(0,-1); 
+    console.log(positions);
+    
+    
+    
+	return positionColor;
+	//return [chainid, positions, color
 };
-
 // colors the residues given, receives data from parseInput
-function residueColor(pdb_id, parsed){
+function residueColor(pdb_id, positionColor){
 	var colorSele = document.getElementById("colorSelect");
 	colorSele.addEventListener( "click", function(){
-		parsed = parseInput(parsed);
+		positionColor = parseInput(positionColor);
+		console.log(positionColor);
+		
 		stage.loadFile("rcsb://"+pdb_id).then(function(col) {
 			col.addRepresentation('cartoon',{color:'lightgrey'});
 			col.setSelection('all');
-			var colorRes = col.addRepresentation('tube',{color:'#ffff8c'});
-			colorRes.setSelection(parsed);
+			var colorRes = col.addRepresentation('licorice',{color:Object.values(positionColor)});
+			colorRes.setSelection("22:A");
 		});
 	});
 };
