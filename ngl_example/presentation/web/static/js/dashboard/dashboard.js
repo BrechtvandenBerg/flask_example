@@ -127,17 +127,11 @@ function parseInput(colorResid){
         var value = keyValuePair[1];
         positionColor[key] = value;
     	};
-    	
-    var correctedPosCol = Object.keys(positionColor).reduce(function(obj,key){
-    	obj[ positionColor[key] ] = key;
-    	return obj;
-    	},{});
-    //console.log(correctedPosCol);	
-    	
-    //console.log(positionColor);	
+    
     colorSort(positionColor);
     chainidSort(positionColor);
     return positioncolor;
+    
 };    
     /******* 
 	Count how many colors are added and then sort by color, every color will get an array of chain id and positions
@@ -145,54 +139,22 @@ function parseInput(colorResid){
 	output: ...
     *******/    
 function colorSort(positionColor){
+	console.log(positionColor);
 	//output = {color:[A12, A56]}
 	// input: array:[A12, A56, B56] 
 	// output: string 'A and (12, 56) and B (56)'
 	
-    var colors = Object.values(positionColor);
-    //console.log(colors);
-    var map = colors.reduce(function(obj, b) { // this will reduce the same color id's to one 
-    obj[b] = ++obj[b] || 1;
-    	return obj;
-    }, {});
-    var countColor = Object.values(map).length;
-    console.log(Object.keys(map));
-   
-    everyColor = Object.keys(map).forEach(function(element){
-    	console.log(element);
-    	});
-    var sDataArray = MultiDimensionalArray(countColor);
-    console.log(sDataArray);
+    var sortedColors = {};
+    for (var color_key in positionColor){
+    	if (!(positionColor[color_key] in sortedColors)){
+    		sortedColors[positionColor[color_key]] = [];
+    	}
+    	
+    	sortedColors[positionColor[color_key]].push(color_key);
+    }
     
-    
-    for(var key in positionColor) {
-        if(positionColor[key] === "#e76818" ){
-        	console.log(key);
-        	sDataArray[0].push(key);
-        };
-    }; 
-        console.log(sDataArray[0]);
-
-    
-    var count = 0;
-    //for 
-    
-    
-    
-    
-};   
-function MultiDimensionalArray(iRows,iCols){
-    var i;
-    var j;
-       var a = new Array(iRows);
-       for (i=0; i < iRows; i++){
-           a[i] = new Array(iCols);
-           for (j=0; j < iCols; j++){           
-        	   a[i][j]= "";
-           };
-       };
-       return(a);
-    }; 
+    return sortedColors;
+}
     
 function chainidSort(positionColor){
     console.log("---------------------------chain id--------------------------------");
@@ -215,7 +177,6 @@ function chainidSort(positionColor){
     console.log("---------------------------positions--------------------------------");
 };  
 
-
     /*******
 	Extraction of positions	from the sorting of the colors and chainids
     *******/
@@ -230,8 +191,8 @@ function chainidSort(positionColor){
 //    
 //    var positions = "("+ prePositions.slice(0,-1) +")"; 
 //    console.log(positions);
-
 // colors the residues given, receives data from parseInput
+
 function residueColor(pdb_id){
 	var colorSele = document.getElementById("colorSelect");
 	colorSele.addEventListener( "click", function(){
