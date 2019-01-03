@@ -44,9 +44,9 @@ function loadStructure(pdb_id){
             stage.signals.clicked.add(function (pickingProxy){
             	if(pickingProxy != undefined){
             	stage.loadFile( "rcsb://"+pdb_id).then(function (sel) {
-            		sel.addRepresentation('cartoon',{color:'lightgrey'});
+            		sel.addRepresentation('contact',{color:'lightgrey'});
 	            	sel.setSelection('all');
-            		var colorthis = sel.addRepresentation('ball+stick', {color:'resname'});
+            		var colorthis = sel.addRepresentation('spacefill', {color:'resname'});
 	            	var atom = pickingProxy.atom || pickingProxy.closestBondAtom;
 	            	var atomData = atom.qualifiedName();
 	            	var atomPosi = atomData.slice(0,-3);
@@ -91,6 +91,10 @@ function loadStructure(pdb_id){
         });	            
 	});
 };	
+//Handle window resizing
+window.addEventListener( "resize", function( event ){
+    stage.handleResize();
+}, false );
 
 function residueMutation(pdb_id){
 	var swapResis = document.getElementById("swapResidues");
@@ -110,7 +114,11 @@ function residueMutation(pdb_id){
 };
 
 function parseInput(colorResid){
-	var positionColor = {}
+//	var getColorscheme = document.getElementById("ColorResid");
+//	getColorscheme.addEventListener("click", function(){
+	var chainColor = {};
+	var chainPos = {};
+	var arrayColorPos = [];
 	var colorResid = $("#colorResid").val(); //  example of data structure A22:#f9d057,A34: #f9d057
 	//console.log(colorResid);
 	/*******
@@ -118,20 +126,53 @@ function parseInput(colorResid){
 	*******/
 	// separate out each key/value pair
     var parts = colorResid.split(',');
-    for(var i = 0; i < parts.length; i++) {
+    for(let i = 0; i < parts.length; i++) {
         var p = parts[i];
         // split key/value pair
         var keyValuePair = p.split(':');
         // add key/value pair to dictionary object
         var key = keyValuePair[0];
-        var value = keyValuePair[1];
-        positionColor[key] = value;
+        
+        var chain = key.substring(0,1);
+        var position = key.substring(1);
+        
+        if (chain in chainColor){
+        	
+        	console.log(chainColor[chain])
+        	console.log(chain in chainColor);
+        	var helpArray = [];
+        	helpArray.push(keyValuePair[1], position);
+        	console.log(helpArray);
+        	arrayColorPos.push(helpArray);
+        	console.log(arrayColorPos);
+        	//chainColor[chain] = chainColor[chain]+", ['"+keyValuePair[1]+"', '"+position+"']";
+        	chainColor[chain] = chainColor[chain], arrayColorPos;
+        	console.log(Object.keys(chainColor))
+        	
+        }else{
+        	var helpingArray = [];
+        	helpingArray.push(keyValuePair[1], position);
+        	arrayColorPos.push(helpingArray);
+        	//chainColor[chain] = "['"+keyValuePair[1]+"', '"+position+"']";
+        	chainColor[chain] = arrayColorPos;
+        	
+        	//console.log(helpingArray)
+        }
+
+//        if(chain in chainColor){
+//        	chainColor[chain] = chainColor[chain], arrayColorPos;
+//        }else{
+//        	var helpingArray = [];
+//        	chainColor[chain] = arrayColorPos;
+//        }
+//        console.log(arrayColorPos);
+//        //console.log(chain);
+//        //console.log(position);
     	};
     
-    colorSort(positionColor);
-    chainidSort(positionColor);
-    return positioncolor;
-    
+    console.log(chainColor);
+
+    return chainColor;
 };    
     /******* 
 	Count how many colors are added and then sort by color, every color will get an array of chain id and positions
@@ -139,10 +180,11 @@ function parseInput(colorResid){
 	output: ...
     *******/    
 function colorSort(positionColor){
-	console.log(positionColor);
-	//output = {color:[A12, A56]}
+	// output = {color:[A12, A56]}
 	// input: array:[A12, A56, B56] 
 	// output: string 'A and (12, 56) and B (56)'
+	Object.values(positionColor).sort();
+	console.log(Object.values(positionColor));
 	
     var sortedColors = {};
     for (var color_key in positionColor){
@@ -153,29 +195,37 @@ function colorSort(positionColor){
     	sortedColors[positionColor[color_key]].push(color_key);
     }
     
+    console.log(sortedColors);
+    chainidSort(sortedColors);
     return sortedColors;
 }
     
-function chainidSort(positionColor){
+function chainidSort(sortedColors){
     console.log("---------------------------chain id--------------------------------");
-    var sortChainPositions = Object.keys(positionColor); 
-    sortChainPositions.sort();  
-    var chainPositions = sortChainPositions.toString();
-    console.log(chainPositions);
-    var preChain = '';
-    var chainid = chainPositions.split(','); // extract the chain from chainPositions
-    for(var k = 0; k < chainid.length; k++) {
-        var q = chainid[k];
-        var pp = q.substr(0,1)+",";
-        preChain += pp;
+    console.log(sortedColors);
+
+   //specifiy selection of interest, ex.: two specific residues (80 and 92) 
+    
+    // data structure = {"color":"chain id""position"}, {... , ...} 
+
+    
+    var values = Object.values(sortedColors);
+    console.log(values);
+    for (var h = 0; values.length; h++){
+    	sortValues = values[h].sort(); 
+    	console.log(sortValues);
+    	stringSortValues = sortValues.toString();
+    	console.log(stringSortValues);
+    	splitValues = stringSortValues.split(",");
+    	console.log(splitValues);
+    	    return stringSortValues
+
     }
-    
-    var chainid = preChain.slice(0,-1);
-    console.log(chainid);
-    
+}
+
 
     console.log("---------------------------positions--------------------------------");
-};  
+//};  
 
     /*******
 	Extraction of positions	from the sorting of the colors and chainids
@@ -191,17 +241,68 @@ function chainidSort(positionColor){
 //    
 //    var positions = "("+ prePositions.slice(0,-1) +")"; 
 //    console.log(positions);
-// colors the residues given, receives data from parseInput
+/*****
+Colors the residues given, receives data from parseInput
+input: ...
+output: ...
+function residueColor(pdb_id, colorChainpos){
+	var colorChainpos = parseInput();
+    for (const [key, value] of Object.entries(colorChainpos)) {
 
-function residueColor(pdb_id){
-	var colorSele = document.getElementById("colorSelect");
-	colorSele.addEventListener( "click", function(){
-		stage.loadFile("rcsb://"+pdb_id).then(function(col) {
-			parseInput();
-			col.addRepresentation('cartoon',{color:'lightgrey'});
-			col.setSelection('all');
-			var colorRes = col.addRepresentation('licorice',{color:'blue'});
-			colorRes.setSelection("22:A");
+    	console.log(key);
+    	chainnumbers = value.split(",");
+    	for(let i = 0; i < chainnumbers.length; i++) {
+        	chainnumber = chainnumbers[i];
+        	console.log(chainnumber);
+            var chain = chainnumber.substring(0,1);
+            var position = chainnumber.substring(1);
+            stage.loadFile( "rcsb://"+pdb_id, { asTrajectory: true } )
+            .then(function(col){
+    				//col.setSelection('all');
+    				//col.addRepresentation('cartoon',{color:'lightgrey'});
+            		console.log(col.getRepresentation());
+    				var colorRes = col.addRepresentation('hyperball',{color:"red"});
+    				colorRes.setSelection(":"+chain+" AND ("+position+")");
+    				console.log(":"+chain+" AND ("+position+")")
+    		});
+        }
+    }
+    stage.loadFile( "rcsb://"+pdb_id, { asTrajectory: true } )
+    .then(function(col){o.autoView();});
+};
+******/
+function residueColor(pdb_id, chainColor){
+	var chainColor = parseInput();
+	
+    for (const [key, value] of Object.entries(chainColor)) {
+	    var colorSele = document.getElementById("colorSelect");
+		stage.loadFile("rcsb://"+pdb_id).then(function(o) {
+			 var schemeId = NGL.ColormakerRegistry.addSelectionScheme(value);
+			 o.setSelection(":"+key);
+			 o.addRepresentation("cartoon", {color: schemeId });  // pass schemeId here
+			 o.autoView();
 		});
-	});
+	}
+    
+//    	chainnumbers = value.split(",");
+//    	for(let i = 0; i < chainnumbers.length; i++) {
+//        	chainnumber = chainnumbers[i];
+//        	//console.log(chainnumber);
+//            var chain = chainnumber.substring(0,1);
+//            //console.log(chain);
+//            var position = chainnumber.substring(1);
+//            //console.log(position);
+//    	}
+    
+//var anScheme = [
+//	['#e76818', '64-74 or 134-154 or 222-254 or 310-310 '], ["red"," 322-326"], ["green", "311-322"], ["yellow", "40-63 or 75-95 or 112-133 or 155-173 or 202-221 or 255-277 or 289-309"], ["blue", "1-39 or 96-112 or 174-201 or 278-288"], ["white", "*"]
+//]
+//          var colorSele = document.getElementById("colorSelect");
+//			stage.loadFile("rcsb://"+pdb_id).then(function(o) {
+//				var schemeId = NGL.ColormakerRegistry.addSelectionScheme(anScheme);
+//				 o.setSelection(":B");
+//				 o.addRepresentation("cartoon", {color: schemeId });  // pass schemeId here
+//			});
+    	
+    
 };
