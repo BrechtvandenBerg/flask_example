@@ -9,7 +9,9 @@ function loadStructure(pdb_id){
                 o.addTrajectory();
                 o.autoView();
                 residueMutation(pdb_id);
-                residueColor(pdb_id);
+                //residueColor(pdb_id);
+                colorToleranceLandscape(pdb_id);
+
             });
             
             // a button that clears the view
@@ -120,7 +122,7 @@ function parseInput(colorResid){
 	var chainPos = {};
 	var arrayColorPos = [];
 	var colorResid = $("#colorResid").val(); //  example of data structure A22:#f9d057,A34: #f9d057
-	//console.log(colorResid);
+	console.log(colorResid);
 	/*******
 	First the 'colorResid' array is converted to an Object/dictionary for better separation of color, chain id and positions
 	*******/
@@ -158,6 +160,12 @@ function parseInput(colorResid){
         	
         	//console.log(helpingArray)
         }
+        
+        
+        
+        
+        
+        
 
 //        if(chain in chainColor){
 //        	chainColor[chain] = chainColor[chain], arrayColorPos;
@@ -174,6 +182,86 @@ function parseInput(colorResid){
 
     return chainColor;
 };    
+
+function parseMetadome(colorResid){
+	var metadomeData = $("#colorResid").val(); 
+	var metadomeColorArray = [];
+	var colorData = metadomeData.split("sw_dn_ds");
+	colorData.shift(); //remove the first array that incorrectly shows "domains: "  
+	for(let i = 0; i < colorData.length; i++){
+		var counter = i + 1 ;
+		var position = counter.toString();
+		console.log(position);
+		
+		var identifyColor = colorData[i];
+		var colorString = identifyColor.substr(3, 18);
+		var colorNumber = parseFloat(colorString);
+		console.log(colorNumber);
+		var colorID = makeColor(colorNumber);
+		console.log(colorID);
+		if(!(position in metadomeColorArray)){
+			var colorArrayArray = [];
+			colorArrayArray.push(colorID, position)
+		}
+		metadomeColorArray.push(colorArrayArray);
+		
+	}
+	console.log(metadomeColorArray);
+	return metadomeColorArray;
+}
+
+function makeColor(colorNumber){
+	
+	var toleranceColorGradient = [ {
+		offset : "0%",
+		color : "#d7191c"
+	}, {
+		offset : "12.5%",
+		color : "#e76818"
+	}, {
+		offset : "25%",
+		color : "#f29e2e"
+	}, {
+		offset : "37.5%",
+		color : "#f9d057"
+	}, {
+		offset : "50%",
+		color : "#ffff8c"
+	}, {
+		offset : "62.5%",
+		color : "#90eb9d"
+	}, {
+		offset : "75%",
+		color : "#00ccbc"
+	}, {
+		offset : "87.5%",
+		color : "#00a6ca"
+	}, {
+		offset : "100%",
+		color : "#2c7bb6"
+	} ]	
+		
+	if (colorNumber <= 0.175) {
+		return toleranceColorGradient[0].color;
+	} else if (colorNumber <= 0.35) {
+		return toleranceColorGradient[1].color;
+	} else if (colorNumber <= 0.525) {
+		return toleranceColorGradient[2].color;
+	} else if (colorNumber <= 0.7) {
+		return toleranceColorGradient[3].color;
+	} else if (colorNumber <= 0.875) {
+		return toleranceColorGradient[4].color;
+	} else if (colorNumber <= 1.025) {
+		return toleranceColorGradient[5].color;
+	} else if (colorNumber <= 1.2) {
+		return toleranceColorGradient[6].color;
+	} else if (colorNumber <= 1.375) {
+		return toleranceColorGradient[7].color;
+	} else {
+		return toleranceColorGradient[8].color;
+	}
+}
+	
     /******* 
 	Count how many colors are added and then sort by color, every color will get an array of chain id and positions
 	input: ...
@@ -273,7 +361,6 @@ function residueColor(pdb_id, colorChainpos){
 ******/
 function residueColor(pdb_id, chainColor){
 	var chainColor = parseInput();
-	
     for (const [key, value] of Object.entries(chainColor)) {
 	    var colorSele = document.getElementById("colorSelect");
 		stage.loadFile("rcsb://"+pdb_id).then(function(o) {
@@ -283,7 +370,17 @@ function residueColor(pdb_id, chainColor){
 			 o.autoView();
 		});
 	}
-    
+}
+function colorToleranceLandscape(pdb_id, metadomeColorArray){
+	var metadomeColorArray = parseMetadome();
+	console.log(metadomeColorArray)
+	stage.loadFile("rcsb://"+pdb_id).then(function(o) {
+		var schemeId = NGL.ColormakerRegistry.addSelectionScheme(metadomeColorArray);
+		o.setSelection("all");
+		o.addRepresentation("cartoon", {color: schemeId });  // pass schemeId here
+		o.autoView();    
+	});
+
 //    	chainnumbers = value.split(",");
 //    	for(let i = 0; i < chainnumbers.length; i++) {
 //        	chainnumber = chainnumbers[i];
