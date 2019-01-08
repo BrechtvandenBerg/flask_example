@@ -1,3 +1,8 @@
+/***
+ * 
+ * @param pdb_id
+ * @returns
+ */
 function loadStructure(pdb_id){
 	document.addEventListener( "DOMContentLoaded", function(){
             stage = new NGL.Stage( "viewport" );
@@ -98,6 +103,11 @@ window.addEventListener( "resize", function( event ){
     stage.handleResize();
 }, false );
 
+/***
+ * 
+ * @param pdb_id
+ * @returns
+ */
 function residueMutation(pdb_id){
 	var swapResis = document.getElementById("swapResidues");
 	swapResis.addEventListener( "click", function(){
@@ -115,13 +125,18 @@ function residueMutation(pdb_id){
 	});
 };
 
+/***
+ * parses the input from the user or other program.
+ * @param colorResid (string) the input given from a user or other program example of data: A22:#e76818,B33:#f29e2e,A21:#f29e2e,A23:#e76818,B43:#f29e2e,A29:#f29e2e,A51:#e76818,B11:#f29e2e
+ * @returns chainColor (object) an object with the chains as keys followed by color and positions as values. 
+ */
 function parseInput(colorResid){
 //	var getColorscheme = document.getElementById("ColorResid");
 //	getColorscheme.addEventListener("click", function(){
 	var chainColor = {};
 	var chainPos = {};
 	var arrayColorPos = [];
-	var colorResid = $("#colorResid").val(); //  example of data structure A22:#f9d057,A34: #f9d057
+	var colorResid = $("#colorResid").val(); 
 	console.log(colorResid);
 	/*******
 	First the 'colorResid' array is converted to an Object/dictionary for better separation of color, chain id and positions
@@ -160,45 +175,36 @@ function parseInput(colorResid){
         	
         	//console.log(helpingArray)
         }
-        
-        
-        
-        
-        
-        
-
-//        if(chain in chainColor){
-//        	chainColor[chain] = chainColor[chain], arrayColorPos;
-//        }else{
-//        	var helpingArray = [];
-//        	chainColor[chain] = arrayColorPos;
-//        }
-//        console.log(arrayColorPos);
-//        //console.log(chain);
-//        //console.log(position);
-    	};
+    };
     
     console.log(chainColor);
 
     return chainColor;
 };    
 
+/***
+ * this function takes an copy of a Metadome output and translates that into an array of arrays.
+ * @param colorResid (string) a copy of the metadome/api/result/"identifier"/ where identifier stands for the protein that will be shown.
+ * @returns metadomeColorArray (array) an array of arrays with a color code and positional data.
+ */
 function parseMetadome(colorResid){
 	var metadomeData = $("#colorResid").val(); 
 	var metadomeColorArray = [];
 	var colorData = metadomeData.split("sw_dn_ds");
 	colorData.shift(); //remove the first array that incorrectly shows "domains: "  
+	positionData = metadomeData.split("protein_pos");
+	positionData.shift(); //remove the first array that incorrectly shows "domains: "  
 	for(let i = 0; i < colorData.length; i++){
-		var counter = i + 1 ;
-		var position = counter.toString();
-		console.log(position);
+		var identifyPosition = positionData[i];
+		var identifiedPosition = identifyPosition.split(",")[0];
+		var position = identifiedPosition.substring(3);
 		
 		var identifyColor = colorData[i];
-		var colorString = identifyColor.substr(3, 18);
+		var identifiedColor = identifyColor.split(",")[0];
+		var colorString = identifiedColor.substr(3);
 		var colorNumber = parseFloat(colorString);
-		console.log(colorNumber);
 		var colorID = makeColor(colorNumber);
-		console.log(colorID);
+		
 		if(!(position in metadomeColorArray)){
 			var colorArrayArray = [];
 			colorArrayArray.push(colorID, position)
@@ -206,10 +212,23 @@ function parseMetadome(colorResid){
 		metadomeColorArray.push(colorArrayArray);
 		
 	}
-	console.log(metadomeColorArray);
+	console.log(metadomeColorArray.toString());
+	
+	
+		
+	
+	
+	
+	
+	
+	
 	return metadomeColorArray;
 }
-
+/***
+ * this function categorizes the float number got from the colorResid from function parseMetadome.
+ * @param colorNumber (float) this number will be categorized into a color.
+ * @returns a color code. 
+ */
 function makeColor(colorNumber){
 	
 	var toleranceColorGradient = [ {
@@ -266,14 +285,14 @@ function makeColor(colorNumber){
 	Count how many colors are added and then sort by color, every color will get an array of chain id and positions
 	input: ...
 	output: ...
-    *******/    
 function colorSort(positionColor){
 	// output = {color:[A12, A56]}
 	// input: array:[A12, A56, B56] 
 	// output: string 'A and (12, 56) and B (56)'
 	Object.values(positionColor).sort();
 	console.log(Object.values(positionColor));
-	
+    
+
     var sortedColors = {};
     for (var color_key in positionColor){
     	if (!(positionColor[color_key] in sortedColors)){
@@ -289,12 +308,7 @@ function colorSort(positionColor){
 }
     
 function chainidSort(sortedColors){
-    console.log("---------------------------chain id--------------------------------");
     console.log(sortedColors);
-
-   //specifiy selection of interest, ex.: two specific residues (80 and 92) 
-    
-    // data structure = {"color":"chain id""position"}, {... , ...} 
 
     
     var values = Object.values(sortedColors);
@@ -310,55 +324,14 @@ function chainidSort(sortedColors){
 
     }
 }
+    *******/    
 
-
-    console.log("---------------------------positions--------------------------------");
-//};  
-
-    /*******
-	Extraction of positions	from the sorting of the colors and chainids
-    *******/
-//    var prePositions = '';
-//    var positionsRaw = chainPositions.split(','); // extract the positions from chainPositions
-//    for(var j = 0; j < positionsRaw.length; j++) {
-//        var q = positionsRaw[j];
-//        var qq = q.slice(1) +"," ;
-//        var pp = q.substr(0,1)+",";
-//        prePositions  += qq;
-//    }
-//    
-//    var positions = "("+ prePositions.slice(0,-1) +")"; 
-//    console.log(positions);
-/*****
-Colors the residues given, receives data from parseInput
-input: ...
-output: ...
-function residueColor(pdb_id, colorChainpos){
-	var colorChainpos = parseInput();
-    for (const [key, value] of Object.entries(colorChainpos)) {
-
-    	console.log(key);
-    	chainnumbers = value.split(",");
-    	for(let i = 0; i < chainnumbers.length; i++) {
-        	chainnumber = chainnumbers[i];
-        	console.log(chainnumber);
-            var chain = chainnumber.substring(0,1);
-            var position = chainnumber.substring(1);
-            stage.loadFile( "rcsb://"+pdb_id, { asTrajectory: true } )
-            .then(function(col){
-    				//col.setSelection('all');
-    				//col.addRepresentation('cartoon',{color:'lightgrey'});
-            		console.log(col.getRepresentation());
-    				var colorRes = col.addRepresentation('hyperball',{color:"red"});
-    				colorRes.setSelection(":"+chain+" AND ("+position+")");
-    				console.log(":"+chain+" AND ("+position+")")
-    		});
-        }
-    }
-    stage.loadFile( "rcsb://"+pdb_id, { asTrajectory: true } )
-    .then(function(col){o.autoView();});
-};
-******/
+/***
+ * uses data provided from parseInput(chainColor) to make a scheme for the colors and use that scheme to color the protein.
+ * @param pdb_id the PDB identifier for protein visualisation.
+ * @param chainColor (object) chain as key and color, position for values.
+ * @returnsa visualisation of a protein with the colors provided .
+ */
 function residueColor(pdb_id, chainColor){
 	var chainColor = parseInput();
     for (const [key, value] of Object.entries(chainColor)) {
@@ -371,35 +344,20 @@ function residueColor(pdb_id, chainColor){
 		});
 	}
 }
+/***
+ * uses data provided from parseMetadome(metadomeColorArray) to make a color scheme to color the protein structure. 
+ * @param pdb_id the PDB identifier for protein visualisation.
+ * @param metadomeColorArray (array) an array of arrays with a color code and positional data.
+ * @returns a visualisation of a protein with the colors provided.
+ */
 function colorToleranceLandscape(pdb_id, metadomeColorArray){
 	var metadomeColorArray = parseMetadome();
-	console.log(metadomeColorArray)
+	//console.log(metadomeColorArray);
 	stage.loadFile("rcsb://"+pdb_id).then(function(o) {
+		console.log(pdb_id)
 		var schemeId = NGL.ColormakerRegistry.addSelectionScheme(metadomeColorArray);
 		o.setSelection("all");
 		o.addRepresentation("cartoon", {color: schemeId });  // pass schemeId here
 		o.autoView();    
 	});
-
-//    	chainnumbers = value.split(",");
-//    	for(let i = 0; i < chainnumbers.length; i++) {
-//        	chainnumber = chainnumbers[i];
-//        	//console.log(chainnumber);
-//            var chain = chainnumber.substring(0,1);
-//            //console.log(chain);
-//            var position = chainnumber.substring(1);
-//            //console.log(position);
-//    	}
-    
-//var anScheme = [
-//	['#e76818', '64-74 or 134-154 or 222-254 or 310-310 '], ["red"," 322-326"], ["green", "311-322"], ["yellow", "40-63 or 75-95 or 112-133 or 155-173 or 202-221 or 255-277 or 289-309"], ["blue", "1-39 or 96-112 or 174-201 or 278-288"], ["white", "*"]
-//]
-//          var colorSele = document.getElementById("colorSelect");
-//			stage.loadFile("rcsb://"+pdb_id).then(function(o) {
-//				var schemeId = NGL.ColormakerRegistry.addSelectionScheme(anScheme);
-//				 o.setSelection(":B");
-//				 o.addRepresentation("cartoon", {color: schemeId });  // pass schemeId here
-//			});
-    	
-    
 };
