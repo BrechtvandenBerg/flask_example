@@ -1,19 +1,18 @@
 /***
- * 
+ * This function takes the PDB ID and instances the stage canvas wherein the protein structure will load and be able to 
  * @param pdb_id
  * @returns
  */
 function loadStructure(pdb_id){
 	document.addEventListener( "DOMContentLoaded", function(){
-            stage = new NGL.Stage( "viewport" );
-            stage.setParameters({backgroundColor:"white"});
+            stage = new NGL.Stage( "viewport" ); 							// creates a stage in which the protein will be visualized
+            stage.setParameters({backgroundColor:"white"}); 				// set the background color to white
             stage.handleResize();
             stage.loadFile( "rcsb://"+pdb_id, { asTrajectory: true } )
             .then(function(o){
-                o.addRepresentation( "cartoon", { sele: "protein"} );
+                o.addRepresentation( "cartoon", { sele: "protein"} );		// the default representation for the protein to be in the cartoon style
                 o.addTrajectory();
                 o.autoView();
-                residueMutation(pdb_id);
                 //residueColor(pdb_id);
                 colorToleranceLandscape(pdb_id);
 
@@ -48,19 +47,19 @@ function loadStructure(pdb_id){
             stage.viewer.container.appendChild(tooltip);
            
             // color the selected residue
-            stage.signals.clicked.add(function (pickingProxy){
-            	if(pickingProxy != undefined){
-            	stage.loadFile( "rcsb://"+pdb_id).then(function (sel) {
-            		sel.addRepresentation('contact',{color:'lightgrey'});
+            stage.signals.clicked.add(function (pickingProxy){								// creates a 'listener' for when a click happens on the stage canvas
+            	if(pickingProxy != undefined){												// allocate a function to the pickingProxy
+            	stage.loadFile( "rcsb://"+pdb_id).then(function (sel) {						// reset the protein to be able to influence the representation of the protein structure
+            		sel.addRepresentation('contact',{color:'lightgrey'});					// show all the contacts the amino acids have with each other
 	            	sel.setSelection('all');
-            		var colorthis = sel.addRepresentation('spacefill', {color:'resname'});
-	            	var atom = pickingProxy.atom || pickingProxy.closestBondAtom;
-	            	var atomData = atom.qualifiedName();
-	            	var atomPosi = atomData.slice(0,-3);
-	            	var atomPosi2 = atomPosi.substr(5);
-	            	var atomSide = atomPosi2+" AND sidechainAttached";
+            		var colorthis = sel.addRepresentation('spacefill', {color:'resname'});	// changes the representation of the clicked amino acid and colors it based on the amino acid type
+	            	var atom = pickingProxy.atom || pickingProxy.closestBondAtom;			
+	            	var atomData = atom.qualifiedName();									// get the information on the clicked atom 
+	            	var atomPosi = atomData.slice(0,-3);									 
+	            	var atomPosi2 = atomPosi.substr(5);										// atomPosi 1 and 2 will get only the position of the clicked amino acid
+	            	var atomSide = atomPosi2+" AND sidechainAttached";						// atom side has to be created to only select one amino acid if not allocated will show the whole structures side chains 
 	            	console.log(atomSide);
-	            	colorthis.setSelection(atomSide);
+	            	colorthis.setSelection(atomSide);										// set the selection only apply to the clicked amino acid
 	                console.log("Atom Position: "+atomPosi2);
 	                sel.autoView();	   
 	                
@@ -70,8 +69,7 @@ function loadStructure(pdb_id){
 	                if (radBox.checked == true){
 		                var selection = new NGL.Selection( atomPosi2 );
 		                var radius = 5;
-		                var atomSet = sel.structure.getAtomSetWithinSelection( selection, radius );
-		                // expand selection to complete groups
+		                var atomSet = sel.structure.getAtomSetWithinSelection( selection, radius );		// expand selection to complete groups
 		                var atomSet2 = sel.structure.getAtomSetWithinGroup( atomSet );               
 		                sel.addRepresentation( "licorice", { sele: atomSet2.toSeleString() } );
 		                sel.addRepresentation( "cartoon", {color:'lightgrey'} );
@@ -81,14 +79,16 @@ function loadStructure(pdb_id){
             	};
             });
             
-            var toggleSideChains = document.getElementById( "toggleSideChains" );
-            toggleSideChains.addEventListener( "click", function(){
-            	stage.removeAllComponents();
-            	stage.loadFile( "rcsb://"+pdb_id, { asTrajectory: true } )
+            var toggleSideChains = document.getElementById("toggleSideChains" );
+            toggleSideChains.addEventListener( "click", function(){								// creates a button when clicked it will show the side chains
+            	var metadomeColorArray = parseMetadome();										// takes the color scheme from parseMetadome
+        		var schemeId = NGL.ColormakerRegistry.addSelectionScheme(metadomeColorArray);	// make variable to be used for coloring and showing the side chains
+            	stage.removeAllComponents();													// reset the stage so it won't show multiple structures on top of each other 
+            	stage.loadFile( "rcsb://"+pdb_id, { asTrajectory: true } )						
             	.then(function(togg){
-                	togg.addRepresentation('tube', { radius: 'sstruc'});
-                	togg.addRepresentation('ball+stick', { sele: 'sidechainAttached'});
-                	togg.addRepresentation('label', {
+                	togg.addRepresentation('tube', {color:schemeId, radius: 'sstruc'}); 		// changes the representation of the protein structure and sets it to tube and sets the radius to sstruc meaning the secondary structure
+                	togg.addRepresentation('ball+stick', { sele: 'sidechainAttached'});			// changes the representation of the side chains by usage of 'sidechainAttached' to ball and stick
+                	togg.addRepresentation('label', {											// creates the label and places it on the backbone showing the amino acid, chain, and position
                 		sele: '.CA',
                 	    color: 'element',
                 	    labelType: 'format',
@@ -104,39 +104,21 @@ window.addEventListener( "resize", function( event ){
 }, false );
 
 /***
+ * parses the input from the user or other program. 
  * 
- * @param pdb_id
- * @returns
- */
-function residueMutation(pdb_id){
-	var swapResis = document.getElementById("swapResidues");
-	swapResis.addEventListener( "click", function(){
-		stage.loadFile("rcsb://"+pdb_id).then(function(component) {
-			struc = component;
-			struc.structure.eachResidue(function (rp) {
-        	    if (rp.isWater()) return;
-        	    var sele = '';
-        	    if (rp.resno !== undefined) sele += rp.resno;
-        	    if (rp.chain) sele += ':' + rp.chainname;
-        	    var name = (rp.resname ? '[' + rp.resname + ']' : '') + sele;
-        	    //console.log(name);
-			});
-		});
-	});
-};
-
-/***
- * parses the input from the user or other program.
+ * 
+ * THIS FUNCTION DOES NOT WORK!!!
+ * 
+ * 
  * @param colorResid (string) the input given from a user or other program example of data: A22:#e76818,B33:#f29e2e,A21:#f29e2e,A23:#e76818,B43:#f29e2e,A29:#f29e2e,A51:#e76818,B11:#f29e2e
  * @returns chainColor (object) an object with the chains as keys followed by color and positions as values. 
  */
 function parseInput(colorResid){
-//	var getColorscheme = document.getElementById("ColorResid");
-//	getColorscheme.addEventListener("click", function(){
+
 	var chainColor = {};
 	var chainPos = {};
 	var arrayColorPos = [];
-	var colorResid = $("#colorResid").val(); 
+	var colorResid = $("#colorResid").val(); // get the value from the "colorResid" field
 	console.log(colorResid);
 	/*******
 	First the 'colorResid' array is converted to an Object/dictionary for better separation of color, chain id and positions
@@ -183,17 +165,17 @@ function parseInput(colorResid){
 };    
 
 /***
- * this function takes an copy of a Metadome output and translates that into an array of arrays.
+ * this function takes a copy of a Metadome output and translates that into an array of arrays.
  * @param colorResid (string) a copy of the metadome/api/result/"identifier"/ where identifier stands for the protein that will be shown.
  * @returns metadomeColorArray (array) an array of arrays with a color code and positional data.
  */
 function parseMetadome(colorResid){
 	var metadomeData = $("#colorResid").val(); 
 	var metadomeColorArray = [];
-	var colorData = metadomeData.split("sw_dn_ds");
-	colorData.shift(); //remove the first array that incorrectly shows "domains: "  
-	positionData = metadomeData.split("protein_pos");
-	positionData.shift(); //remove the first array that incorrectly shows "domains: "  
+	var colorData = metadomeData.split("sw_dn_ds"); 	//splits the line after "sw_dn_ds" to get the color code
+	colorData.shift(); 									//remove the first array that shows "domains: "  
+	positionData = metadomeData.split("protein_pos");   //splits the line after "protein_pos" to get the protein position
+	positionData.shift(); 								//remove the first array that shows "domains: "  
 	for(let i = 0; i < colorData.length; i++){
 		var identifyPosition = positionData[i];
 		var identifiedPosition = identifyPosition.split(",")[0];
@@ -213,14 +195,6 @@ function parseMetadome(colorResid){
 		
 	}
 	console.log(metadomeColorArray.toString());
-	
-	
-		
-	
-	
-	
-	
-	
 	
 	return metadomeColorArray;
 }
@@ -281,56 +255,11 @@ function makeColor(colorNumber){
 	}
 }
 	
-    /******* 
-	Count how many colors are added and then sort by color, every color will get an array of chain id and positions
-	input: ...
-	output: ...
-function colorSort(positionColor){
-	// output = {color:[A12, A56]}
-	// input: array:[A12, A56, B56] 
-	// output: string 'A and (12, 56) and B (56)'
-	Object.values(positionColor).sort();
-	console.log(Object.values(positionColor));
-    
-
-    var sortedColors = {};
-    for (var color_key in positionColor){
-    	if (!(positionColor[color_key] in sortedColors)){
-    		sortedColors[positionColor[color_key]] = [];
-    	}
-    	
-    	sortedColors[positionColor[color_key]].push(color_key);
-    }
-    
-    console.log(sortedColors);
-    chainidSort(sortedColors);
-    return sortedColors;
-}
-    
-function chainidSort(sortedColors){
-    console.log(sortedColors);
-
-    
-    var values = Object.values(sortedColors);
-    console.log(values);
-    for (var h = 0; values.length; h++){
-    	sortValues = values[h].sort(); 
-    	console.log(sortValues);
-    	stringSortValues = sortValues.toString();
-    	console.log(stringSortValues);
-    	splitValues = stringSortValues.split(",");
-    	console.log(splitValues);
-    	    return stringSortValues
-
-    }
-}
-    *******/    
-
 /***
  * uses data provided from parseInput(chainColor) to make a scheme for the colors and use that scheme to color the protein.
- * @param pdb_id the PDB identifier for protein visualisation.
+ * @param pdb_id the PDB identifier for protein visualization.
  * @param chainColor (object) chain as key and color, position for values.
- * @returnsa visualisation of a protein with the colors provided .
+ * @returns a visualization of a protein with the colors provided .
  */
 function residueColor(pdb_id, chainColor){
 	var chainColor = parseInput();
@@ -338,8 +267,8 @@ function residueColor(pdb_id, chainColor){
 	    var colorSele = document.getElementById("colorSelect");
 		stage.loadFile("rcsb://"+pdb_id).then(function(o) {
 			 var schemeId = NGL.ColormakerRegistry.addSelectionScheme(value);
-			 o.setSelection(":"+key);
-			 o.addRepresentation("cartoon", {color: schemeId });  // pass schemeId here
+			 o.setSelection(":"+key);											
+			 o.addRepresentation("cartoon", {color: schemeId });  				// pass schemeId here
 			 o.autoView();
 		});
 	}
@@ -352,12 +281,10 @@ function residueColor(pdb_id, chainColor){
  */
 function colorToleranceLandscape(pdb_id, metadomeColorArray){
 	var metadomeColorArray = parseMetadome();
-	//console.log(metadomeColorArray);
 	stage.loadFile("rcsb://"+pdb_id).then(function(o) {
-		console.log(pdb_id)
-		var schemeId = NGL.ColormakerRegistry.addSelectionScheme(metadomeColorArray);
-		o.setSelection("all");
-		o.addRepresentation("cartoon", {color: schemeId });  // pass schemeId here
+		var schemeId = NGL.ColormakerRegistry.addSelectionScheme(metadomeColorArray);		// creates a custom color scheme for protein coloring
+		o.setSelection("all");																// first has to allocate all possible positions
+		o.addRepresentation("cartoon", {color: schemeId });  								// pass schemeId here
 		o.autoView();    
 	});
 };
